@@ -15,29 +15,41 @@ logger = logging.getLogger(__name__)
 class Scheduler:
     def __init__(self, broker: Broker):
         self.broker = broker
-        self.stage_one_queue = asyncio.Queue()
-        self.stage_two_queue = asyncio.Queue()
+        self.queue_stage_1 = asyncio.Queue()
+        self.queue_stage_2 = asyncio.Queue()
+        self.queue_stage_3 = asyncio.Queue()
 
-        self.input_queue_model_1 = multiprocessing.Queue()
-        self.output_queue_model_1 = multiprocessing.Queue()
+        self.input_queue_stage_1 = multiprocessing.Queue()
+        self.output_queue_stage_1 = multiprocessing.Queue()
         self.worker_1 = Worker(
             func=...,  # TODO add function
-            input_queue=self.input_queue_model_1,
-            output_queue=self.output_queue_model_1,
+            input_queue=self.input_queue_stage_1,
+            output_queue=self.output_queue_stage_1,
         )
 
-        self.input_queue_model_2 = multiprocessing.Queue()
-        self.output_queue_model_2 = multiprocessing.Queue()
+        self.input_queue_stage_2 = multiprocessing.Queue()
+        self.output_queue_stage_2 = multiprocessing.Queue()
         self.worker_2 = Worker(
             func=...,  # TODO add function
-            input_queue=self.input_queue_model_2,
-            output_queue=self.output_queue_model_2,
+            input_queue=self.input_queue_stage_2,
+            output_queue=self.output_queue_stage_2,
+        )
+
+        self.input_queue_stage_3 = multiprocessing.Queue()
+        self.output_queue_stage_3 = multiprocessing.Queue()
+        self.worker_3 = Worker(
+            func=...,  # TODO add function
+            input_queue=self.input_queue_stage_3,
+            output_queue=self.output_queue_stage_3,
         )
 
         self.process_1 = multiprocessing.Process(target=self.worker_1.work)
         self.process_2 = multiprocessing.Process(target=self.worker_2.work)
+        self.process_3 = multiprocessing.Process(target=self.worker_3.work)
+
         self.process_1.start()
         self.process_2.start()
+        self.process_3.start()
 
     def __del__(self):
         for process in [self.process_1, self.process_2]:
@@ -49,33 +61,47 @@ class Scheduler:
         while True:
             task = await self.broker.sub_task()
             task.img = pickle.loads(task.img)
-            self.stage_one_queue.put_nowait(task)
+            self.queue_stage_1.put_nowait(task)
             await asyncio.sleep(0)
 
-    async def stage_one(self):
+    async def stage_1(self):
         while True:
-            while self.stage_one_queue.empty():
+            while self.queue_stage_1.empty():
                 await asyncio.sleep(0)
-            task = self.stage_one_queue.get_nowait()
+            task = self.queue_stage_1.get_nowait()
 
-            self.input_queue_model_1.put_nowait(task)
-            while self.output_queue_model_1.empty():
+            self.input_queue_stage_1.put_nowait(task)
+            while self.output_queue_stage_1.empty():
                 await asyncio.sleep(0)
-            result = self.output_queue_model_1.get()
+            result = self.output_queue_stage_1.get()
 
-            self.stage_two_queue.put_nowait(result)
+            self.queue_stage_2.put_nowait(result)
             await asyncio.sleep(0)
 
-    async def stage_two(self):
+    async def stage_2(self):
         while True:
-            while self.stage_two_queue.empty():
+            while self.queue_stage_2.empty():
                 await asyncio.sleep(0)
-            task = self.stage_two_queue.get_nowait()
+            task = self.queue_stage_2.get_nowait()
 
-            self.input_queue_model_2.put_nowait(task)
-            while self.output_queue_model_2.empty():
+            self.input_queue_stage_2.put_nowait(task)
+            while self.output_queue_stage_2.empty():
                 await asyncio.sleep(0)
-            result = self.output_queue_model_2.get()
+            result = self.output_queue_stage_2.get()
+
+            self.queue_stage_3.put_nowait(result)
+            await asyncio.sleep(0)
+
+    async def stage_3(self):
+        while True:
+            while self.queue_stage_3.empty():
+                await asyncio.sleep(0)
+            task = self.queue_stage_3.get_nowait()
+
+            self.input_queue_stage_3.put_nowait(task)
+            while self.output_queue_stage_3.empty():
+                await asyncio.sleep(0)
+            result = self.output_queue_stage_3.get()
 
             task.img = pickle.dumps(result.img).hex()
             self.broker.pub_result(task)

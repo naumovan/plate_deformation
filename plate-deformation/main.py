@@ -22,8 +22,9 @@ def main():
     async def run_background_tasks(_app):
         tasks = [
             asyncio.create_task(scheduler.schedule()),
-            asyncio.create_task(scheduler.stage_one()),
-            asyncio.create_task(scheduler.stage_two()),
+            asyncio.create_task(scheduler.stage_1()),
+            asyncio.create_task(scheduler.stage_2()),
+            asyncio.create_task(scheduler.stage_3()),
         ]
         yield
         for task in tasks:
