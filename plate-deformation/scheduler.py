@@ -1,0 +1,3 @@
+class Scheduler:
+    async def schedule(self):
+        ...
