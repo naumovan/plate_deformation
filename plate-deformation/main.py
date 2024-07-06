@@ -4,6 +4,7 @@ from contextlib import suppress
 
 from aiohttp import web
 
+from broker import Broker
 from handler import Handler
 from log import init_log
 from scheduler import Scheduler
@@ -13,15 +14,23 @@ def main():
     app_port = int(os.getenv("APP_PORT", "8000"))
 
     init_log(stdout_level="DEBUG")
-    handler = Handler()
-    scheduler = Scheduler()
+
+    broker = Broker()
+    handler = Handler(broker)
+    scheduler = Scheduler(broker)
 
     async def run_background_tasks(_app):
-        task = asyncio.create_task(scheduler.schedule())
+        tasks = [
+            asyncio.create_task(scheduler.schedule()),
+            asyncio.create_task(scheduler.stage_one()),
+            asyncio.create_task(scheduler.stage_two()),
+        ]
         yield
-        task.cancel()
-        with suppress(asyncio.CancelledError):
-            await task
+        for task in tasks:
+            task.cancel()
+        for task in tasks:
+            with suppress(asyncio.CancelledError):
+                await task
 
     app = web.Application()
     app.cleanup_ctx.append(run_background_tasks)
