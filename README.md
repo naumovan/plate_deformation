@@ -72,6 +72,13 @@ docker build -t plate-deformation .
 docker container run -p 8000:8000 plate-deformation
 ```
 
+### Фронт
+
+```bash
+pip install streamlit
+streamlit run front/main.py
+```
+
 ## Формат ответа
 
 Формат ответа представляет JSON, в котором находится единственное поле `img` со значением изображения в виде hex-строки.
