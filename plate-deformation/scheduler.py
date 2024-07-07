@@ -59,9 +59,12 @@ class Scheduler:
 
     async def schedule(self):
         while True:
-            task = await self.broker.sub_task()
-            task.img = pickle.loads(task.img)
-            self.queue_stage_1.put_nowait(task)
+            try:
+                task = await self.broker.sub_task()
+                task.img = pickle.loads(task.img)
+                self.queue_stage_1.put_nowait(task)
+            except Exception as exc:
+                logger.error(exc)
             await asyncio.sleep(0)
 
     async def stage_1(self):
