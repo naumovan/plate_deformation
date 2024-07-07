@@ -21,6 +21,11 @@ class Handler:
         self.broker = broker
 
     async def handle(self, request: Request) -> Response:
+        """
+        Принять запрос, отправить в очередь брокера на обработку, получить результат и вернуть в теле ответа и
+        в качестве HTTP-заголовка `X-Text`.
+        """
+
         logger.info("Incoming a new request: %s", id(request))
         data = await request.post()
         task_id = uuid.uuid4().int
