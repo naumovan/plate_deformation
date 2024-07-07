@@ -2,7 +2,8 @@ import asyncio
 import logging
 import multiprocessing
 
-import pickle
+import cv2
+import numpy as np
 
 from broker import Broker
 from detection.base import extract_and_process_crops, detect_symbols, postprocess_symbols
@@ -61,7 +62,8 @@ class Scheduler:
         while True:
             try:
                 task = await self.broker.sub_task()
-                task.img = pickle.loads(task.img)
+                image_np = np.frombuffer(task.img, np.uint8)
+                task.img = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
                 self.queue_stage_1.put_nowait(task)
             except Exception as exc:
                 logger.error(exc)
