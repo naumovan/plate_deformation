@@ -1,7 +1,11 @@
-from os import getenv
-
+import pickle
+import PIL.Image
 import requests
 import streamlit as st
+from os import getenv
+
+import numpy as np
+
 
 host = getenv("BACKEND_HOST", "http://localhost:8000/")
 
@@ -17,6 +21,7 @@ def main():
     st.subheader("Цифровой прорыв, команда `tobytes()`")
 
     image = st.file_uploader("Загрузить изображение", type=["png", "jpg", "jpeg"])
+
     left, middle, right = st.columns(3)
     if image is not None:
         with left:
@@ -24,6 +29,9 @@ def main():
             st.image(image, use_column_width=True)
 
         with st.spinner("Восстановление геометрии..."):
+            image = PIL.Image.open(image)
+            st.image(image, caption='Input', use_column_width=True)
+            image = pickle.dumps(np.array(image))
             resp = requests.post(host, files={"file": image}, timeout=60)
             if resp.status_code != 200:
                 st.error(f"Ошибка при отправке запроса: {resp.status_code}, {resp.text}")
