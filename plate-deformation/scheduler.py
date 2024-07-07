@@ -5,7 +5,7 @@ import multiprocessing
 import pickle
 
 from broker import Broker
-from detection.base import ...  # TODO add imports of functions
+from detection.base import extract_and_process_crops, detect_symbols, postprocess_symbols
 from worker import Worker
 
 
@@ -22,7 +22,7 @@ class Scheduler:
         self.input_queue_stage_1 = multiprocessing.Queue()
         self.output_queue_stage_1 = multiprocessing.Queue()
         self.worker_1 = Worker(
-            func=...,  # TODO add function
+            func=extract_and_process_crops,
             input_queue=self.input_queue_stage_1,
             output_queue=self.output_queue_stage_1,
         )
@@ -30,7 +30,7 @@ class Scheduler:
         self.input_queue_stage_2 = multiprocessing.Queue()
         self.output_queue_stage_2 = multiprocessing.Queue()
         self.worker_2 = Worker(
-            func=...,  # TODO add function
+            func=detect_symbols,
             input_queue=self.input_queue_stage_2,
             output_queue=self.output_queue_stage_2,
         )
@@ -38,7 +38,7 @@ class Scheduler:
         self.input_queue_stage_3 = multiprocessing.Queue()
         self.output_queue_stage_3 = multiprocessing.Queue()
         self.worker_3 = Worker(
-            func=...,  # TODO add function
+            func=postprocess_symbols,
             input_queue=self.input_queue_stage_3,
             output_queue=self.output_queue_stage_3,
         )
@@ -97,11 +97,11 @@ class Scheduler:
             while self.queue_stage_3.empty():
                 await asyncio.sleep(0)
             task = self.queue_stage_3.get_nowait()
+            plate = task.img
 
             self.input_queue_stage_3.put_nowait(task)
             while self.output_queue_stage_3.empty():
                 await asyncio.sleep(0)
             result = self.output_queue_stage_3.get()
 
-            task.img = pickle.dumps(result.img).hex()
-            self.broker.pub_result(task)
+            self.broker.pub_result(result, plate)

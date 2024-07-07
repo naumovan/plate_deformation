@@ -1,7 +1,7 @@
 aiohttp==3.9.5
 pytest==8.2.2
 requests==2.32.3
-cv2==4.8.1
+opencv-python==4.8.1.78
 easyocr==1.7.1
 numpy==1.26.4
 ultralytics==8.2.32
