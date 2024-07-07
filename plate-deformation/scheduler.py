@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 class Scheduler:
     def __init__(self, broker: Broker):
+        """
+        Инициализация воркеров и очередей входных/выходных данных
+        """
+
         self.broker = broker
         self.queue_stage_1 = asyncio.Queue()
         self.queue_stage_2 = asyncio.Queue()
@@ -59,6 +63,10 @@ class Scheduler:
                 process.join(timeout=3)
 
     async def schedule(self):
+        """
+        Распределение задач
+        """
+
         while True:
             try:
                 task = await self.broker.sub_task()
@@ -70,6 +78,10 @@ class Scheduler:
             await asyncio.sleep(0)
 
     async def stage_1(self):
+        """
+        Детекция символов номера
+        """
+
         while True:
             while self.queue_stage_1.empty():
                 await asyncio.sleep(0)
@@ -84,6 +96,10 @@ class Scheduler:
             await asyncio.sleep(0)
 
     async def stage_2(self):
+        """
+        Распознавание символов номера
+        """
+
         while True:
             while self.queue_stage_2.empty():
                 await asyncio.sleep(0)
@@ -98,6 +114,10 @@ class Scheduler:
             await asyncio.sleep(0)
 
     async def stage_3(self):
+        """
+        Создание шаблона
+        """
+
         while True:
             while self.queue_stage_3.empty():
                 await asyncio.sleep(0)

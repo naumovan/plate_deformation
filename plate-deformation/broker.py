@@ -5,6 +5,10 @@ from utils import Task
 
 
 class Broker:
+    """
+    Брокер сообщений, реализованный по паттерну PubSub.
+    """
+
     def __init__(self):
         self.task_queue = asyncio.Queue()
         self.result_queue = {}
