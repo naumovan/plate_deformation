@@ -1,5 +1,5 @@
+import io
 import logging
-import random
 import time
 import uuid
 
@@ -30,9 +30,17 @@ class Handler:
         logger.debug("Publish task %s", task_id)
         start = time.perf_counter()
         self.broker.pub_task(task)
-        result: str = await self.broker.sub_result(task_id)
+        result = await self.broker.sub_result(task_id)
         end = time.perf_counter()
         logger.debug("Retrieved task %s result", task_id)
         logger.info("Detection got %s seconds", end - start)
 
-        return web.json_response({"img": result})
+        image = result[0]
+        with io.BytesIO() as byte_stream:
+            image.save(byte_stream, format='JPEG')
+            image_bytes = byte_stream.getvalue()
+
+        response = web.Response(body=image_bytes)
+        response.headers["X-Text"] = result[1]
+
+        return response
