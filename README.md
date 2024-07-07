@@ -31,14 +31,17 @@ Python, docker, pytorch, yolov8, easyocr, streamlit
 import pickle
 import requests
 import cv2
-
+import io
+import PIL.Image
 
 image_path = "fixtures/0b90c1c74d46abf7.jpg"
 image = cv2.imread(image_path)
 image_bytes = pickle.dumps(image)
 files = {'file': ('filename', image_bytes)}
 r = requests.post('http://127.0.0.1:8000/', files=files, timeout=20)
-print("Result = ", r.json())
+print("Plate = ", r.headers["X-Text"])
+image = PIL.Image.open(io.BytesIO(r.content))
+image.show()
 ```
 
 ## Как запустить
@@ -81,7 +84,7 @@ streamlit run front/main.py
 
 ## Формат ответа
 
-Формат ответа представляет JSON, в котором находится единственное поле `img` со значением изображения в виде hex-строки.
+Формат ответа представляет собой jpeg-картинку в байтах в теле ответа, а также заголовок `X-Text` с текстом номера.
 
 ## Как это работает
 Клиент формирует и отправляет POST-запрос по URL `/`, указывая `file` (фотографию с номером).
