@@ -1,4 +1,6 @@
-FROM python:3.9-slim
+FROM python:3.9.18
+
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 WORKDIR app
 COPY requirements.txt ./
